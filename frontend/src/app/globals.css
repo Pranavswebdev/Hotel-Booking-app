@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@theme {
+  /* Jiva Space — Figma design tokens */
+  --color-bg: #222220;
+  --color-surface: #2a2a28;
+  --color-surface-light: #34332f;
+  --color-cream: #e4d8c3;
+  --color-muted: #c1c1c1;
+  --color-coral: #e87461;
+  --color-coral-dark: #d4604d;
+  --color-white: #ffffff;
+
+  --font-sans:
+    "SF Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
+    sans-serif;
+
+  --radius-card: 20px;
+  --radius-pill: 999px;
+}
+
+:root {
+  --background: #222220;
+  --foreground: #ffffff;
+}
+
+html {
+  background: var(--color-bg);
+  color: var(--color-white);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-white);
+  font-family: var(--font-sans);
+}
+
+/* Hide scrollbars on horizontal scroll rows */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
