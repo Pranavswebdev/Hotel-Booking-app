@@ -21,7 +21,7 @@ export default function DiscoverPage() {
   }
 
   return (
-    <AppShell>
+    <AppShell width="wide">
       <div className="flex flex-1 flex-col px-6 pb-4">
         <header className="mt-3">
           <h1 className="text-[24px] font-semibold">Where To?</h1>

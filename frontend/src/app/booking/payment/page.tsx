@@ -6,13 +6,18 @@ import { AppShell } from "@/components/ui/AppShell";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { BackIcon } from "@/components/icons";
-import { formatRp, getSpace } from "@/lib/data";
+import { formatRp } from "@/lib/data";
+import { api, getToken } from "@/lib/api";
+import { useSpace } from "@/lib/useSpaces";
 
 function PaymentContent() {
   const router = useRouter();
   const params = useSearchParams();
-  const space = getSpace(params.get("space") ?? "");
+  const spaceId = params.get("space") ?? "";
+  const { space } = useSpace(spaceId);
   const nights = Math.max(1, Number(params.get("nights") ?? 1));
+  const checkIn = params.get("checkIn") ?? "";
+  const checkOut = params.get("checkOut") ?? "";
 
   const [form, setForm] = useState({
     fullName: "",
@@ -20,6 +25,8 @@ function PaymentContent() {
     members: "2 Member",
     idCard: "",
   });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const total = space ? space.pricePerNight * nights : 0;
 
@@ -27,9 +34,30 @@ function PaymentContent() {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    router.push(`/booking/confirmation?space=${space?.id ?? ""}`);
+    if (!getToken()) {
+      router.push("/login");
+      return;
+    }
+    setError("");
+    setLoading(true);
+    try {
+      await api.createBooking({
+        spaceId,
+        checkIn,
+        checkOut,
+        members: Number(form.members.replace(/\D/g, "")) || 1,
+        guestName: form.fullName,
+        phone: form.phone,
+        idCardNumber: form.idCard,
+      });
+      router.push(`/booking/confirmation?space=${spaceId}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Booking failed");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -96,8 +124,9 @@ function PaymentContent() {
               {formatRp(total)}
             </span>
           </div>
-          <Button type="submit" fullWidth>
-            Payment Method
+          {error && <p className="mb-3 text-[13px] text-coral">{error}</p>}
+          <Button type="submit" fullWidth disabled={loading}>
+            {loading ? "Processing…" : "Payment Method"}
           </Button>
         </div>
       </form>

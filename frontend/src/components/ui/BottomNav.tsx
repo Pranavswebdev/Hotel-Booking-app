@@ -22,7 +22,7 @@ export function BottomNav() {
 
   return (
     <nav className="sticky bottom-0 z-10 mt-auto border-t border-white/5 bg-bg/95 px-6 pb-6 pt-3 backdrop-blur">
-      <ul className="flex items-center justify-between">
+      <ul className="mx-auto flex w-full max-w-md items-center justify-between">
         {tabs.map(({ href, label, Icon }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`);
           return (

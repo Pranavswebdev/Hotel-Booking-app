@@ -1,3 +1,6 @@
+export const categories = ["Hotel", "Apartment", "Guest House", "Villa"] as const;
+export type Category = (typeof categories)[number];
+
 export type Space = {
   id: string;
   name: string;
@@ -5,114 +8,57 @@ export type Space = {
   pricePerNight: number;
   nights: number;
   rating: number;
-  category: "Hotel" | "Apartment" | "Guest House" | "Villa";
+  reviewCount: number;
+  category: Category;
   guests: number;
   bedrooms: number;
   beds: number;
   baths: number;
+  description: string;
   image: string;
 };
 
-// Prices in IDR, matching the Figma "Rp" copy.
-export const spaces: Space[] = [
-  {
-    id: "avenzel-cibubur",
-    name: "Avenzel Hotel",
-    location: "Cibubur, West Java, Indonesia",
-    pricePerNight: 1101030,
-    nights: 1,
-    rating: 4.9,
-    category: "Hotel",
-    guests: 2,
-    bedrooms: 1,
-    beds: 2,
-    baths: 1,
-    image:
-      "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80",
-  },
-  {
-    id: "hotel-o-cibubur",
-    name: "Hotel O Cibubur",
-    location: "Cibubur, West Java, Indonesia",
-    pricePerNight: 300352,
-    nights: 1,
-    rating: 4.89,
-    category: "Hotel",
-    guests: 2,
-    bedrooms: 1,
-    beds: 1,
-    baths: 1,
-    image:
-      "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800&q=80",
-  },
-  {
-    id: "apartment-cipayung",
-    name: "Apartment in Cipayung",
-    location: "Cipayung, East Jakarta",
-    pricePerNight: 450765,
-    nights: 2,
-    rating: 4.95,
-    category: "Apartment",
-    guests: 3,
-    bedrooms: 1,
-    beds: 2,
-    baths: 1,
-    image:
-      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80",
-  },
-  {
-    id: "apartment-pondok-gede",
-    name: "Apartment in Pondok Gede",
-    location: "Pondok Gede, East Jakarta",
-    pricePerNight: 393280,
-    nights: 5,
-    rating: 4.89,
-    category: "Apartment",
-    guests: 4,
-    bedrooms: 2,
-    beds: 2,
-    baths: 1,
-    image:
-      "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80",
-  },
-  {
-    id: "songgoroti-villa",
-    name: "Songgoroti Villa",
-    location: "Songgoroti Street 68, Malang",
-    pricePerNight: 1844274,
-    nights: 5,
-    rating: 5,
-    category: "Villa",
-    guests: 6,
-    bedrooms: 3,
-    beds: 4,
-    baths: 2,
-    image:
-      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80",
-  },
-  {
-    id: "reddoorz-cibubur",
-    name: "Reddoorz near Cibubur",
-    location: "Cibubur, West Java, Indonesia",
-    pricePerNight: 368854,
-    nights: 5,
-    rating: 5,
-    category: "Guest House",
-    guests: 2,
-    bedrooms: 1,
-    beds: 1,
-    baths: 1,
-    image:
-      "https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=800&q=80",
-  },
-];
+/** Shape returned by the backend API. */
+export type ApiSpace = {
+  _id: string;
+  slug: string;
+  name: string;
+  location: string;
+  pricePerNight: number;
+  rating: number;
+  reviewCount?: number;
+  category: Category;
+  guests: number;
+  bedrooms: number;
+  beds: number;
+  baths: number;
+  description?: string;
+  image?: string;
+};
 
-export const categories = ["Hotel", "Apartment", "Guest House", "Villa"] as const;
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80";
 
-export function getSpace(id: string): Space | undefined {
-  return spaces.find((s) => s.id === id);
+/** Normalize an API space into the shape the UI components expect. */
+export function normalizeSpace(s: ApiSpace): Space {
+  return {
+    id: s.slug,
+    name: s.name,
+    location: s.location,
+    pricePerNight: s.pricePerNight,
+    nights: 1,
+    rating: s.rating ?? 0,
+    reviewCount: s.reviewCount ?? 0,
+    category: s.category,
+    guests: s.guests ?? 1,
+    bedrooms: s.bedrooms ?? 1,
+    beds: s.beds ?? 1,
+    baths: s.baths ?? 1,
+    description: s.description ?? "",
+    image: s.image || FALLBACK_IMAGE,
+  };
 }
 
 export function formatRp(value: number): string {
-  return "Rp" + value.toLocaleString("id-ID");
+  return "₹" + value.toLocaleString("en-IN");
 }

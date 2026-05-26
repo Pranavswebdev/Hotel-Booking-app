@@ -1,32 +1,66 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/ui/AppShell";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { ProfileIcon } from "@/components/icons";
+import { api, clearToken, getToken } from "@/lib/api";
 
 export default function ProfilePage() {
   const router = useRouter();
   const [form, setForm] = useState({
-    name: "Hasbi Kinclaid",
-    phone: "+62 85711180040",
-    address: "Jl. Raya Jonggol-Dayeuh, Bogor 16830",
+    name: "",
+    phone: "",
+    address: "",
     gender: "Male",
-    birth: "29/11/1998",
+    birthDate: "",
   });
+  const [email, setEmail] = useState("");
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!getToken()) {
+      router.replace("/login");
+      return;
+    }
+    api
+      .getMe()
+      .then(({ user }) => {
+        setEmail(String(user.email ?? ""));
+        setForm({
+          name: String(user.name ?? ""),
+          phone: String(user.phone ?? ""),
+          address: String(user.address ?? ""),
+          gender: String(user.gender || "Male"),
+          birthDate: String(user.birthDate ?? ""),
+        });
+      })
+      .catch(() => router.replace("/login"));
+  }, [router]);
 
   function update(key: keyof typeof form, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
     setSaved(false);
   }
 
-  function handleSave(e: React.FormEvent) {
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    setSaved(true);
+    setLoading(true);
+    try {
+      await api.updateMe(form);
+      setSaved(true);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleLogout() {
+    clearToken();
+    router.push("/login");
   }
 
   return (
@@ -38,7 +72,10 @@ export default function ProfilePage() {
           <span className="grid h-20 w-20 place-items-center rounded-full bg-surface text-cream ring-1 ring-white/10">
             <ProfileIcon width={36} height={36} />
           </span>
-          <p className="mt-3 text-[17px] font-semibold">{form.name}</p>
+          <p className="mt-3 text-[17px] font-semibold">
+            {form.name || "Your Profile"}
+          </p>
+          <span className="text-[12px] text-muted">{email}</span>
           <span className="mt-1 rounded-pill bg-coral/15 px-3 py-0.5 text-[12px] font-medium text-coral">
             Customer
           </span>
@@ -78,21 +115,21 @@ export default function ProfilePage() {
           </div>
           <TextField
             label="Birth Of Date"
-            value={form.birth}
-            onChange={(e) => update("birth", e.target.value)}
+            value={form.birthDate}
+            onChange={(e) => update("birthDate", e.target.value)}
           />
         </div>
 
         <div className="mt-6 space-y-3">
-          <Button type="submit" fullWidth>
-            {saved ? "Saved!" : "Save Changes"}
+          <Button type="submit" fullWidth disabled={loading}>
+            {loading ? "Saving…" : saved ? "Saved!" : "Save Changes"}
           </Button>
           <Button
             type="button"
             variant="outline"
             fullWidth
             className="border-coral/40 text-coral"
-            onClick={() => router.push("/login")}
+            onClick={handleLogout}
           >
             Log Out
           </Button>

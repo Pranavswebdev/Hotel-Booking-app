@@ -8,15 +8,28 @@ import { Brand } from "@/components/ui/Brand";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { SocialButtons } from "@/components/auth/SocialButtons";
+import { api, setToken } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    router.push("/home");
+    setError("");
+    setLoading(true);
+    try {
+      const { token } = await api.login(email, password);
+      setToken(token);
+      router.push("/home");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -57,8 +70,9 @@ export default function LoginPage() {
               Forget Password
             </Link>
           </div>
-          <Button type="submit" fullWidth className="mt-2">
-            Login
+          {error && <p className="text-[13px] text-coral">{error}</p>}
+          <Button type="submit" fullWidth className="mt-2" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
           </Button>
         </form>
 

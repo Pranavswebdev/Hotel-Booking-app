@@ -7,7 +7,7 @@ import { CategoryChips } from "@/components/ui/CategoryChips";
 import { SpaceRowCard, SpaceCard } from "@/components/SpaceCard";
 import { BackIcon, SearchIcon } from "@/components/icons";
 import { useRouter } from "next/navigation";
-import { spaces } from "@/lib/data";
+import { useSpaces } from "@/lib/useSpaces";
 
 const tags = ["All", "Hotel", "Apartment", "Villa", "Guest House"];
 
@@ -15,6 +15,7 @@ export default function SearchPage() {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState("All");
+  const { spaces, loading } = useSpaces();
 
   const results = spaces.filter((s) => {
     const matchesTag = tag === "All" || s.category === tag;
@@ -29,7 +30,7 @@ export default function SearchPage() {
   const hasQuery = query.trim().length > 0;
 
   return (
-    <AppShell>
+    <AppShell width="wide">
       <div className="flex flex-1 flex-col px-6 pb-6">
         <header className="mt-3 flex items-center gap-3">
           <button
@@ -57,7 +58,13 @@ export default function SearchPage() {
           <CategoryChips options={tags} value={tag} onChange={setTag} />
         </div>
 
-        {!hasQuery ? (
+        {loading && (
+          <p className="mt-10 text-center text-[14px] text-muted">
+            Loading spaces…
+          </p>
+        )}
+
+        {loading ? null : !hasQuery ? (
           <section className="mt-7">
             <div className="mb-3 flex items-center gap-2">
               <span className="rounded-pill bg-coral/15 px-2.5 py-1 text-[12px] font-medium text-coral">
@@ -65,21 +72,23 @@ export default function SearchPage() {
               </span>
               <h2 className="text-[17px] font-semibold">Find Popular Spaces</h2>
             </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {results.map((s) => (
                 <SpaceCard key={s.id} space={s} />
               ))}
             </div>
           </section>
         ) : results.length > 0 ? (
-          <section className="mt-6 space-y-3">
-            <p className="text-[13px] text-muted">
+          <section className="mt-6">
+            <p className="mb-3 text-[13px] text-muted">
               {results.length} result{results.length > 1 ? "s" : ""} for
               &quot;{query}&quot;
             </p>
-            {results.map((s) => (
-              <SpaceRowCard key={s.id} space={s} />
-            ))}
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+              {results.map((s) => (
+                <SpaceRowCard key={s.id} space={s} />
+              ))}
+            </div>
           </section>
         ) : (
           <NoResults query={query} />

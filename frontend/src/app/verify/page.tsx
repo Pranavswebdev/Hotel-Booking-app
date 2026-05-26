@@ -1,14 +1,21 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/ui/AppShell";
 import { Brand } from "@/components/ui/Brand";
 import { Button } from "@/components/ui/Button";
+import { api, setToken } from "@/lib/api";
 
-export default function VerifyPage() {
+function VerifyContent() {
   const router = useRouter();
+  const params = useSearchParams();
+  const email = params.get("email") ?? "";
+  const devCode = params.get("code") ?? "";
+
   const [digits, setDigits] = useState(["", "", "", ""]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const inputs = useRef<Array<HTMLInputElement | null>>([]);
 
   function setDigit(index: number, value: string) {
@@ -25,6 +32,20 @@ export default function VerifyPage() {
     }
   }
 
+  async function handleContinue() {
+    setError("");
+    setLoading(true);
+    try {
+      const { token } = await api.verify(email, digits.join(""));
+      setToken(token);
+      router.push("/home");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Verification failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <AppShell>
       <div className="flex flex-1 flex-col px-7 pb-8">
@@ -35,12 +56,19 @@ export default function VerifyPage() {
             Verification Code
           </h1>
           <p className="mt-2 text-[14px] leading-relaxed text-muted">
-            Enter the 4 Digit Verification code that has been sent to your
-            Email.
+            Enter the 4 Digit Verification code that has been sent to{" "}
+            {email || "your Email"}.
           </p>
         </div>
 
-        <div className="mt-10 flex justify-center gap-4">
+        {devCode && (
+          <p className="mt-4 rounded-xl bg-surface px-4 py-3 text-[13px] text-cream ring-1 ring-white/5">
+            Dev mode: your code is <span className="font-semibold">{devCode}</span>{" "}
+            (email delivery not configured yet)
+          </p>
+        )}
+
+        <div className="mt-8 flex justify-center gap-4">
           {digits.map((d, i) => (
             <input
               key={i}
@@ -58,13 +86,17 @@ export default function VerifyPage() {
           ))}
         </div>
 
-        <div className="mt-10 space-y-3">
+        {error && (
+          <p className="mt-4 text-center text-[13px] text-coral">{error}</p>
+        )}
+
+        <div className="mt-8 space-y-3">
           <Button
             fullWidth
-            disabled={digits.some((d) => !d)}
-            onClick={() => router.push("/home")}
+            disabled={digits.some((d) => !d) || loading}
+            onClick={handleContinue}
           >
-            Continue
+            {loading ? "Verifying..." : "Continue"}
           </Button>
           <Button variant="ghost" fullWidth onClick={() => router.back()}>
             Go Back
@@ -79,5 +111,13 @@ export default function VerifyPage() {
         </p>
       </div>
     </AppShell>
+  );
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={<AppShell />}>
+      <VerifyContent />
+    </Suspense>
   );
 }

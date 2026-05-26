@@ -14,15 +14,26 @@ import {
   LocationIcon,
   StarIcon,
 } from "@/components/icons";
-import { formatRp, getSpace } from "@/lib/data";
+import { formatRp } from "@/lib/data";
+import { useSpace } from "@/lib/useSpaces";
 
 const TOTAL_PHOTOS = 27;
 
 export default function SpaceDetailsPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
-  const space = getSpace(params.id);
+  const { space, loading } = useSpace(params.id);
   const [photo] = useState(1);
+
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="flex flex-1 items-center justify-center">
+          <p className="text-muted">Loading…</p>
+        </div>
+      </AppShell>
+    );
+  }
 
   if (!space) {
     return (
@@ -43,18 +54,18 @@ export default function SpaceDetailsPage() {
   ];
 
   return (
-    <AppShell hideStatusBar>
+    <AppShell flush>
       <div className="flex flex-1 flex-col">
-        <div className="relative h-[46%] min-h-[320px] w-full">
+        <div className="relative h-[46vh] min-h-[320px] w-full">
           <Image
             src={space.image}
             alt={space.name}
             fill
-            sizes="(max-width: 768px) 100vw, 393px"
+            sizes="(max-width: 768px) 100vw, 576px"
             className="object-cover"
             priority
           />
-          <div className="absolute inset-x-0 top-0 flex items-center justify-between p-5 pt-12">
+          <div className="absolute inset-x-0 top-0 flex items-center justify-between p-5 pt-7">
             <button
               type="button"
               onClick={() => router.back()}

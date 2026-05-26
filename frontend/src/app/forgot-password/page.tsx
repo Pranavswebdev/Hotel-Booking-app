@@ -7,15 +7,23 @@ import { AppShell } from "@/components/ui/AppShell";
 import { Brand } from "@/components/ui/Brand";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
+import { api } from "@/lib/api";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSent(true);
+    setLoading(true);
+    try {
+      await api.forgotPassword(email);
+      setSent(true);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -44,8 +52,8 @@ export default function ForgotPasswordPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
             />
-            <Button type="submit" fullWidth className="mt-2">
-              Send Reset Link
+            <Button type="submit" fullWidth className="mt-2" disabled={loading}>
+              {loading ? "Sending..." : "Send Reset Link"}
             </Button>
           </form>
         ) : (

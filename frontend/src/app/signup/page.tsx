@@ -8,6 +8,7 @@ import { Brand } from "@/components/ui/Brand";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { SocialButtons } from "@/components/auth/SocialButtons";
+import { api } from "@/lib/api";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -15,15 +16,26 @@ export default function SignUpPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (password !== confirm) {
       setError("Passwords do not match");
       return;
     }
     setError("");
-    router.push("/verify");
+    setLoading(true);
+    try {
+      const res = await api.register(email, password);
+      const params = new URLSearchParams({ email });
+      if (res.devVerificationCode) params.set("code", res.devVerificationCode);
+      router.push(`/verify?${params.toString()}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Sign up failed");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -65,8 +77,8 @@ export default function SignUpPage() {
             required
           />
           {error && <p className="text-[13px] text-coral">{error}</p>}
-          <Button type="submit" fullWidth className="mt-2">
-            Sign Up
+          <Button type="submit" fullWidth className="mt-2" disabled={loading}>
+            {loading ? "Creating account..." : "Sign Up"}
           </Button>
         </form>
 

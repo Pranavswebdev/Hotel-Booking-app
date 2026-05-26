@@ -52,9 +52,15 @@ function BookingDateContent() {
           className="mt-auto"
           fullWidth
           disabled={n === 0}
-          onClick={() =>
-            router.push(`/booking/payment?space=${spaceId}&nights=${n}`)
-          }
+          onClick={() => {
+            const qs = new URLSearchParams({
+              space: spaceId,
+              nights: String(n),
+              checkIn: range.start?.toISOString().slice(0, 10) ?? "",
+              checkOut: range.end?.toISOString().slice(0, 10) ?? "",
+            });
+            router.push(`/booking/payment?${qs.toString()}`);
+          }}
         >
           Continue
         </Button>
